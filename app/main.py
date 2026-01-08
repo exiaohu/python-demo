@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Dict
 
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,13 +28,11 @@ from app.core.errors import (
 from app.core.exceptions import AppError
 from app.core.logger import logger
 from app.core.rate_limit import limiter
+from app.core.telemetry import setup_opentelemetry
 from app.core.watcher import start_config_watcher
 from app.db.session import engine
 from app.middleware.monitoring import PrometheusMiddleware, metrics_endpoint
 from app.middleware.request_id import RequestIDMiddleware
-
-# Setup rate limiter
-# limiter is imported from app.core.rate_limit
 
 
 @asynccontextmanager
@@ -62,6 +61,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 def create_app() -> FastAPI:
+    if settings.SENTRY_DSN:
+        sentry_sdk.init(
+            dsn=settings.SENTRY_DSN,
+            environment=settings.SENTRY_ENVIRONMENT,
+            traces_sample_rate=1.0,
+        )
+        logger.info("Sentry initialized")
+
     app = FastAPI(
         title=settings.APP_NAME,
         version=settings.VERSION,
@@ -72,6 +79,8 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
         default_response_class=ORJSONResponse,
     )
+
+    setup_opentelemetry(app)
 
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore

@@ -20,9 +20,10 @@ def server() -> None:
     click.echo("Starting server...")
     uvicorn.run(
         "app.main:app",
-        host="0.0.0.0",
+        host="0.0.0.0",  # nosec B104
         port=settings.PORT,
         reload=settings.DEBUG,
+        workers=settings.WORKERS,
     )
 
 

@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Optional, Union
 
 from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "YOUR_SECRET_KEY_HERE_CHANGE_IN_PRODUCTION"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    WORKERS: int = 1
 
     # CORS
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
@@ -49,6 +51,19 @@ class Settings(BaseSettings):
     # Cache
     CACHE_ENABLED: bool = True
     CACHE_EXPIRATION: int = 60  # seconds
+
+    # Celery
+    CELERY_BROKER_URL: str = "redis://localhost:6379/1"
+    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/1"
+
+    # OpenTelemetry
+    OTEL_ENABLED: bool = False
+    OTEL_SERVICE_NAME: str = "python-demo"
+    OTEL_EXPORTER_OTLP_ENDPOINT: str = "http://localhost:4317"
+
+    # Sentry
+    SENTRY_DSN: Optional[str] = None
+    SENTRY_ENVIRONMENT: str = "local"
 
 
 settings = Settings()

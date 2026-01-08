@@ -15,7 +15,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
@@ -24,16 +24,22 @@ jobs:
         cache-dependency-path: |
           requirements.txt
           requirements-dev.txt
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt -r requirements-dev.txt
-        
+
     - name: Lint with Ruff and Mypy
       run: |
         make lint
-        
+
+    - name: Security Check (Bandit)
+      run: bandit -r app
+
+    - name: Dependency Audit (pip-audit)
+      run: pip-audit
+
     - name: Test with pytest
       run: |
         make test

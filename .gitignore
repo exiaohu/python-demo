@@ -47,9 +47,6 @@ htmlcov/
 *.sqlite
 *.sqlite3
 
-# Docker
-.dockerignore
-
 # Mac
 .DS_Store
 

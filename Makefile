@@ -28,6 +28,8 @@ test:
 lint:
 	ruff check .
 	mypy .
+	bandit -r app
+	pip-audit
 
 fmt:
 	ruff check --fix .

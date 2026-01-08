@@ -10,7 +10,7 @@ pydantic-settings
 alembic
 greenlet
 bcrypt
-python-jose[cryptography]
+pyjwt
 python-multipart
 email-validator
 orjson
@@ -18,3 +18,9 @@ slowapi
 redis
 watchdog
 fastapi-cache2[redis]
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-instrumentation-fastapi
+opentelemetry-exporter-otlp
+sentry-sdk
+celery[redis]

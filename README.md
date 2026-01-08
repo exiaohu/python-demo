@@ -23,8 +23,15 @@
     *   **连接池**: 优化的数据库连接池配置。
 *   **限流**: 基于 **Redis** (生产) 或内存 (开发) 的 API 速率限制 (`slowapi`)，防止滥用。
 *   **动态配置**: 集成 `watchdog` 监听 `.env` 文件变更，支持运行时热加载配置（适用于 Feature Flags 等运行时读取的配置）。
-*   **可观测性**: 
+*   **可观测性**:
     *   **Prometheus 指标**: 内置 `/metrics` 端点用于监控。
+    *   **全链路追踪**: 集成 **OpenTelemetry**，支持分布式追踪 (需配置 `OTEL_ENABLED=True`)。
+    *   **错误追踪**: 集成 **Sentry**，自动捕获未处理异常 (需配置 `SENTRY_DSN`)。
+*   **异步任务**:
+    *   **Celery**: 基于 Redis 的分布式任务队列，支持耗时任务（如发送邮件）。
+*   **安全性**:
+    *   **代码审计**: 集成 **Bandit** 扫描代码安全隐患。
+    *   **依赖扫描**: 集成 **pip-audit** 扫描依赖库漏洞。
     *   **结构化日志**: 使用 `structlog` 的 JSON 日志，包含 **Request ID** 追踪。
 *   **Docker & Compose**: 生产优化的多阶段构建 Dockerfile 和一键式 `docker-compose` 部署 (包含 **Redis**)，包含健康检查与网络隔离。
 *   **代码质量**: 使用 **Ruff** 进行完整的代码检查和格式化，**Mypy** 进行静态类型检查。
@@ -83,6 +90,22 @@
     ```
     访问: http://localhost:8080/docs
 
+## 🚀 异步任务 (Celery)
+
+启动 Celery Worker:
+
+```bash
+# 需先启动 Redis
+celery -A app.worker worker --loglevel=info
+```
+
+发送测试任务 (需进入 Python shell):
+
+```python
+from app.tasks.email import send_email_task
+send_email_task.delay("user@example.com", "Hello", "World")
+```
+
 ### 🐳 Docker Compose (推荐)
 
 启动完整技术栈 (App + PostgreSQL):
@@ -133,6 +156,21 @@ make test
   "message": "Success"
 }
 ```
+
+### 🛡️ 安全
+
+运行安全审计:
+```bash
+make lint
+```
+
+### 🦗 负载测试 (Locust)
+
+安装依赖后，启动 Locust:
+```bash
+locust -f tests/locustfile.py
+```
+访问 http://localhost:8089 开始压测。
 
 ## 📄 许可证
 

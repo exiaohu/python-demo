@@ -7,3 +7,6 @@ mypy
 types-sqlalchemy
 pre-commit
 types-redis
+bandit
+pip-audit
+locust
