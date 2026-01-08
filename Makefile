@@ -13,6 +13,7 @@ help:
 	@echo "  make clean           - Remove temporary files"
 	@echo "  make migrate msg=... - Generate migration script"
 	@echo "  make migrate-up      - Apply migrations"
+	@echo "  make seed            - Seed database with initial data"
 	@echo "  make migrate-down    - Revert last migration"
 
 install-deps:
@@ -46,7 +47,10 @@ migrate:
 	alembic revision --autogenerate -m "$(msg)"
 
 migrate-up:
-	alembic upgrade head
+	python -m app.cli migrate
+
+seed:
+	python -m app.cli seed
 
 migrate-down:
 	alembic downgrade -1

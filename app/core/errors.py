@@ -3,7 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.core.exceptions import AppError, NotFoundError, ValidationError
+from app.core.exceptions import AppError, ForbiddenError, NotFoundError, ValidationError
 from app.core.logger import logger
 
 
@@ -25,7 +25,9 @@ async def app_exception_handler(request: Request, exc: AppError) -> JSONResponse
     if isinstance(exc, NotFoundError):
         status_code = status.HTTP_404_NOT_FOUND
     elif isinstance(exc, ValidationError):
-        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+        status_code = status.HTTP_400_BAD_REQUEST
+    elif isinstance(exc, ForbiddenError):
+        status_code = status.HTTP_403_FORBIDDEN
     else:
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 

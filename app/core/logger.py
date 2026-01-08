@@ -23,6 +23,7 @@ def setup_logger() -> Any:
     )
 
     processors = [
+        structlog.contextvars.merge_contextvars,  # Merge context vars (user_id, etc)
         structlog.stdlib.filter_by_level,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,

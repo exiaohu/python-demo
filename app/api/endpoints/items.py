@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi_cache.decorator import cache
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud
 from app.api.deps import PaginationParams, get_pagination
 from app.core.config import settings
+from app.core.exceptions import NotFoundError
 from app.db.session import get_db
 from app.schemas.item import Item as ItemSchema
 from app.schemas.item import ItemCreate
@@ -18,6 +19,9 @@ router = APIRouter()
 async def read_items(
     pagination: PaginationParams = Depends(get_pagination), db: AsyncSession = Depends(get_db)
 ) -> ResponseBase[Page[ItemSchema]]:
+    """
+    Retrieve items with pagination.
+    """
     # Note: fastapi-cache needs serializable objects.
     # SQLAlchemy models are not directly serializable by default JSON encoder.
     # However, since we return Pydantic models (ResponseBase[Page[ItemSchema]]),
@@ -35,13 +39,19 @@ async def read_items(
 
 @router.post("/", response_model=ResponseBase[ItemSchema])
 async def create_item(item: ItemCreate, db: AsyncSession = Depends(get_db)) -> ResponseBase[ItemSchema]:
+    """
+    Create a new item.
+    """
     db_item = await crud.item.create(db, obj_in=item)
     return ResponseBase(data=db_item)
 
 
 @router.get("/{item_id}", response_model=ResponseBase[ItemSchema])
 async def read_item(item_id: int, db: AsyncSession = Depends(get_db)) -> ResponseBase[ItemSchema]:
+    """
+    Get a specific item by ID.
+    """
     item = await crud.item.get(db, id=item_id)
     if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise NotFoundError(detail="Item not found")
     return ResponseBase(data=item)

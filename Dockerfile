@@ -40,6 +40,9 @@ RUN apt-get update && \
 # Copy application code
 COPY . .
 
+# Remove unnecessary files
+RUN rm -rf tests docs .git .github
+
 # Ensure start script is executable
 RUN chmod +x /app/scripts/start.sh
 

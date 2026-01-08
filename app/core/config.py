@@ -11,6 +11,17 @@ class Settings(BaseSettings):
     PORT: int = 8080
     DATABASE_URL: str = "sqlite+aiosqlite:///./test.db"
 
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def assemble_db_connection(cls, v: str) -> str:
+        if v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        if v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if v.startswith("sqlite://") and not v.startswith("sqlite+aiosqlite://"):
+            return v.replace("sqlite://", "sqlite+aiosqlite://", 1)
+        return v
+
     # Database Pool
     DB_POOL_SIZE: int = 5
     DB_MAX_OVERFLOW: int = 10
@@ -64,6 +75,10 @@ class Settings(BaseSettings):
     # Sentry
     SENTRY_DSN: Optional[str] = None
     SENTRY_ENVIRONMENT: str = "local"
+
+    # Admin
+    FIRST_SUPERUSER: str = "admin@example.com"
+    FIRST_SUPERUSER_PASSWORD: str = "admin"
 
 
 settings = Settings()

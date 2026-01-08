@@ -1,6 +1,7 @@
 from typing import Annotated
 
 import jwt
+import structlog
 from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import PyJWTError
@@ -12,6 +13,8 @@ from app.core.config import settings
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.token import TokenPayload
+
+logger = structlog.get_logger()
 
 reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/login/access-token")
 
@@ -44,6 +47,9 @@ async def get_current_user(db: AsyncSession = Depends(get_db), token: str = Depe
     user = await crud.user.get(db, id=int(token_data.sub))  # type: ignore
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    # Bind user_id to the logger context
+    structlog.contextvars.bind_contextvars(user_id=user.id)
     return user
 
 

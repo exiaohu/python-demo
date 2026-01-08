@@ -1,7 +1,12 @@
+import asyncio
+
 import click
 import uvicorn
+from alembic import command
+from alembic.config import Config
 
 from app.core.config import settings
+from app.db.init_db import main as init_db
 
 
 @click.group()
@@ -30,8 +35,14 @@ def server() -> None:
 @cli.command()
 def migrate() -> None:
     click.echo("Running migrations...")
-    # Add migration logic here
-    pass
+    alembic_cfg = Config("alembic.ini")
+    command.upgrade(alembic_cfg, "head")
+
+
+@cli.command()
+def seed() -> None:
+    click.echo("Seeding database...")
+    asyncio.run(init_db())
 
 
 if __name__ == "__main__":

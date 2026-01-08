@@ -8,9 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import ORJSONResponse
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
-from redis import asyncio as aioredis
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -33,6 +30,7 @@ from app.core.watcher import start_config_watcher
 from app.db.session import engine
 from app.middleware.monitoring import PrometheusMiddleware, metrics_endpoint
 from app.middleware.request_id import RequestIDMiddleware
+from app.middleware.security import SecurityHeadersMiddleware
 
 
 @asynccontextmanager
@@ -45,11 +43,21 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Initialize Cache
     if settings.CACHE_ENABLED:
         try:
+            from fastapi_cache import FastAPICache
+            from fastapi_cache.backends.redis import RedisBackend
+            from redis import asyncio as aioredis
+
             redis = aioredis.from_url(settings.REDIS_URL, encoding="utf8", decode_responses=True)
             FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
             logger.info("Cache initialized with Redis")
         except Exception as e:
             logger.warning(f"Failed to initialize cache: {e}")
+            # Fallback to in-memory cache for testing or if Redis fails
+            from fastapi_cache import FastAPICache
+            from fastapi_cache.backends.inmemory import InMemoryBackend
+
+            FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
+            logger.info("Cache initialized with InMemoryBackend")
 
     yield
 
@@ -78,6 +86,16 @@ def create_app() -> FastAPI:
         redoc_url="/redoc",
         lifespan=lifespan,
         default_response_class=ORJSONResponse,
+        responses={
+            400: {
+                "description": "Bad Request",
+                "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}},
+            },
+            401: {"description": "Unauthorized"},
+            403: {"description": "Forbidden"},
+            404: {"description": "Not Found"},
+            422: {"description": "Validation Error"},
+        },
     )
 
     setup_opentelemetry(app)
@@ -94,6 +112,9 @@ def create_app() -> FastAPI:
 
     # Request ID
     app.add_middleware(RequestIDMiddleware)
+
+    # Security Headers
+    app.add_middleware(SecurityHeadersMiddleware)
 
     # Set all CORS enabled origins
     if settings.BACKEND_CORS_ORIGINS:
@@ -138,10 +159,30 @@ def create_app() -> FastAPI:
                 await conn.execute(text("SELECT 1"))
             db_status = "ok"
         except Exception as e:
-            logger.error(f"Health check failed: {e}")
+            logger.error(f"DB health check failed: {e}")
             db_status = "error"
 
-        return {"status": "ok" if db_status == "ok" else "error", "version": settings.VERSION, "database": db_status}
+        # Redis check
+        redis_status = "n/a"
+        if settings.CACHE_ENABLED:
+            try:
+                from redis import asyncio as aioredis
+
+                redis = aioredis.from_url(settings.REDIS_URL, encoding="utf8", decode_responses=True)
+                await redis.ping()
+                await redis.close()
+                redis_status = "ok"
+            except Exception as e:
+                logger.error(f"Redis health check failed: {e}")
+                redis_status = "error"
+
+        status = "ok" if db_status == "ok" and redis_status != "error" else "error"
+        return {
+            "status": status,
+            "version": settings.VERSION,
+            "database": db_status,
+            "redis": redis_status,
+        }
 
     return app
 

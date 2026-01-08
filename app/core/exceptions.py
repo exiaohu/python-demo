@@ -1,7 +1,9 @@
 class AppError(Exception):
     """Base exception for application."""
 
-    pass
+    def __init__(self, detail: str) -> None:
+        self.detail = detail
+        super().__init__(detail)
 
 
 class NotFoundError(AppError):
@@ -9,4 +11,8 @@ class NotFoundError(AppError):
 
 
 class ValidationError(AppError):
+    pass
+
+
+class ForbiddenError(AppError):
     pass
