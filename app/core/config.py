@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     PORT: int = 8080
     DATABASE_URL: str = "sqlite+aiosqlite:///./test.db"
-    
+
     # Database Pool
     DB_POOL_SIZE: int = 5
     DB_MAX_OVERFLOW: int = 10
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     # Security
     # SECRET_KEY must be set in .env file or environment variable
-    SECRET_KEY: str
+    SECRET_KEY: str = "YOUR_SECRET_KEY_HERE_CHANGE_IN_PRODUCTION"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 

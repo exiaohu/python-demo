@@ -18,8 +18,7 @@ router = APIRouter()
 @router.post("/login/access-token", response_model=Token)
 @limiter.limit("5/minute")
 async def login_access_token(
-    request: Request,
-    db: AsyncSession = Depends(deps.get_db), form_data: OAuth2PasswordRequestForm = Depends()
+    request: Request, db: AsyncSession = Depends(deps.get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Any:
     """
     OAuth2 compatible token login, get an access token for future requests

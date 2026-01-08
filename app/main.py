@@ -32,7 +32,6 @@ from app.db.session import engine
 from app.middleware.monitoring import PrometheusMiddleware, metrics_endpoint
 from app.middleware.request_id import RequestIDMiddleware
 
-
 # Setup rate limiter
 # limiter is imported from app.core.rate_limit
 
@@ -40,10 +39,10 @@ from app.middleware.request_id import RequestIDMiddleware
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Application starting up...")
-    
+
     # Start config watcher
     observer = start_config_watcher()
-    
+
     # Initialize Cache
     if settings.CACHE_ENABLED:
         try:
@@ -54,7 +53,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             logger.warning(f"Failed to initialize cache: {e}")
 
     yield
-    
+
     # Cleanup if needed
     if observer:
         observer.stop()
@@ -75,7 +74,7 @@ def create_app() -> FastAPI:
     )
 
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
     app.add_middleware(SlowAPIMiddleware)
 
     # Trusted Host

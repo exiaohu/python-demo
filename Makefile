@@ -17,6 +17,7 @@ help:
 
 install-deps:
 	$(PYTHON) -m pip install -r requirements.txt -r requirements-dev.txt
+	pre-commit install
 
 run:
 	$(PYTHON) main.py server

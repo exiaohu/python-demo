@@ -1,12 +1,14 @@
 import os
-import threading
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
+from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
 
 from app.core.logger import logger
 from app.core.reloader import reload_settings
+
+if TYPE_CHECKING:
+    from watchdog.observers.api import BaseObserver
 
 
 class ConfigFileHandler(FileSystemEventHandler):
@@ -14,11 +16,11 @@ class ConfigFileHandler(FileSystemEventHandler):
         self.filename = filename
         self._last_reload_time = 0.0
 
-    def on_modified(self, event):
+    def on_modified(self, event: FileSystemEvent) -> None:
         # Ensure we only react to the specific file
         if event.is_directory:
             return
-        
+
         # Check if the modified file matches our target filename
         # event.src_path is absolute, so we check basename or full match
         if os.path.basename(event.src_path) == self.filename:
@@ -29,7 +31,7 @@ class ConfigFileHandler(FileSystemEventHandler):
                 logger.error(f"Error reloading settings: {e}")
 
 
-def start_config_watcher(env_file: str = ".env") -> Optional[Observer]:
+def start_config_watcher(env_file: str = ".env") -> "Optional[BaseObserver]":
     """
     Start a background thread to watch the .env file for changes.
     """
@@ -43,7 +45,7 @@ def start_config_watcher(env_file: str = ".env") -> Optional[Observer]:
     handler = ConfigFileHandler(filename)
     observer = Observer()
     observer.schedule(handler, directory, recursive=False)
-    
+
     try:
         observer.start()
         logger.info(f"Config watcher started for: {env_file}")

@@ -1,5 +1,6 @@
-from app.core.config import settings, Settings
+from app.core.config import Settings, settings
 from app.core.logger import logger
+
 
 def reload_settings() -> None:
     """
@@ -13,7 +14,7 @@ def reload_settings() -> None:
         for field in new_settings.model_fields.keys():
             new_value = getattr(new_settings, field)
             setattr(settings, field, new_value)
-        
+
         logger.info("Settings reloaded successfully")
     except Exception as e:
         logger.error(f"Failed to reload settings: {e}")

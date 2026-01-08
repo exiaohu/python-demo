@@ -1,4 +1,4 @@
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator, Dict
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
 # Construct engine arguments based on database type
-engine_args = {
+engine_args: Dict[str, Any] = {
     "echo": settings.DEBUG,
     "future": True,
 }

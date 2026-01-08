@@ -1,5 +1,3 @@
-from typing import Sequence
-
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_cache.decorator import cache
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,18 +18,18 @@ router = APIRouter()
 async def read_items(
     pagination: PaginationParams = Depends(get_pagination), db: AsyncSession = Depends(get_db)
 ) -> ResponseBase[Page[ItemSchema]]:
-    # Note: fastapi-cache needs serializable objects. 
+    # Note: fastapi-cache needs serializable objects.
     # SQLAlchemy models are not directly serializable by default JSON encoder.
     # However, since we return Pydantic models (ResponseBase[Page[ItemSchema]]),
     # FastAPI converts them before sending. But @cache runs on the return value of the function.
     # We must ensure the return value is Pydantic models, not ORM models mixed in.
-    
+
     db_items = await crud.item.get_multi(db, skip=pagination.skip, limit=pagination.size)
     total = await crud.item.count(db)
-    
+
     # Explicitly convert ORM objects to Pydantic models
     items = [ItemSchema.model_validate(item) for item in db_items]
-    
+
     return ResponseBase(data=Page(items=items, total=total, page=pagination.page, size=pagination.size))
 
 

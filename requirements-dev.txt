@@ -5,3 +5,5 @@ httpx
 ruff
 mypy
 types-sqlalchemy
+pre-commit
+types-redis

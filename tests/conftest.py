@@ -18,7 +18,7 @@ TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 async def init_cache():
     from fastapi_cache import FastAPICache
     from fastapi_cache.backends.inmemory import InMemoryBackend
-    
+
     FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
     yield
     # No explicit cleanup needed for in-memory backend in function scope
@@ -85,4 +85,3 @@ async def superuser_token_headers(client: AsyncClient, db: AsyncSession) -> dict
 
     access_token = security.create_access_token(user.id)
     return {"Authorization": f"Bearer {access_token}"}
-
